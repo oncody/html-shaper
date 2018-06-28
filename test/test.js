@@ -25,4 +25,10 @@ describe('Testing html', function() {
             assert.equal(formatter.formatHtml('<!-- comment   text   -->'), '<!-- comment text -->\n');
         });
     });
+
+    describe('<head/>', function() {
+        it(`should return <head/>`, function() {
+            assert.equal(formatter.formatHtml('<head/>'), '<head/>\n');
+        });
+    });
 });

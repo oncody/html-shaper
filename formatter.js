@@ -31,7 +31,11 @@ function formatHtml(htmlString) {
         }
 
         parseExpectedCharacter('<');
-        // todo: finish this method
+        let elementName = parseNonWhitespace();
+        if(elementName.endsWith('/>')) {
+            formattedString += `<${elementName}\n`;
+            return;
+        }
     }
 
     function isWhitespace(character) {
@@ -51,7 +55,7 @@ function formatHtml(htmlString) {
     }
 
     function consumeUntilNonWhitespace() {
-        while(isWhitespace(previewNextCharacter())) {
+        while((index < htmlString.length) && isWhitespace(previewNextCharacter())) {
             parseNextCharacter();
         }
     }
@@ -155,6 +159,15 @@ function formatHtml(htmlString) {
 
     function isNextCharacterWhitespace() {
         return isWhitespace(previewNextCharacter());
+    }
+
+    function parseNonWhitespace() {
+        let string = '';
+        while((index < htmlString.length) && !isWhitespace(previewNextCharacter())) {
+            string += parseNextCharacter();
+        }
+
+        return string;
     }
 
     // this asserts next character is whitespace
