@@ -56,12 +56,6 @@ function formatHtml(htmlString) {
         }
     }
 
-    function consumeUntilNonWhitespace() {
-        while((index < htmlString.length) && stringUtils.isWhitespace(previewNextString(1))) {
-            parseNextCharacter();
-        }
-    }
-
     function parseDoctype() {
         parseExpectedString('<!doctype');
         parseWhitespace();
@@ -96,6 +90,12 @@ function formatHtml(htmlString) {
 
         parseExpectedString('-->');
         formattedHtml += `<!-- ${commentText}-->\n`;
+    }
+
+    function consumeUntilNonWhitespace() {
+        while((index < htmlString.length) && stringUtils.isWhitespace(previewNextString(1))) {
+            parseNextCharacter();
+        }
     }
 
     function isNextString(expectedString) {
