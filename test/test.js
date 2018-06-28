@@ -7,4 +7,10 @@ describe('Testing html', function() {
             assert.equal(formatter.formatHtml('<!doctype html>'), '<!doctype html>\n');
         });
     });
+
+    describe('empty comment', function() {
+        it(`should return nothing`, function() {
+            assert.equal(formatter.formatHtml('<!-->'), '');
+        });
+    });
 });

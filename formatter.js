@@ -26,7 +26,8 @@ function formatHtml(htmlString) {
     function parseElement() {
         previewExpectedCharacter('<');
         if(previewNextCharacterAwayFromCurrentIndex(1) === '!') {
-            return parseSpecialElement();
+            parseSpecialElement();
+            return;
         }
 
         parseExpectedCharacter('<');
@@ -41,9 +42,10 @@ function formatHtml(htmlString) {
         previewExpectedString('<!');
         let nextCharacter = previewNextCharacterAwayFromCurrentIndex(2);
         switch(nextCharacter) {
-            case '-': return parseComment();
-            case 'd': return parseDoctype();
-            case 'D': return parseDoctype();
+            case '-': parseComment();
+            break;
+            case 'd': parseDoctype(); break;
+            case 'D': parseDoctype(); break;
             default: throwParseErrorIfUnequal('-', nextCharacter);
         }
     }
@@ -65,7 +67,11 @@ function formatHtml(htmlString) {
     }
 
     function parseComment() {
-        parseExpectedString('<--');
+        parseExpectedString('<!--');
+        if(previewNextCharacter() === '>') {
+            parseNextCharacter();
+            return;
+        }
         // todo: finish this method
     }
 
