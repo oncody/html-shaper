@@ -72,7 +72,34 @@ function formatHtml(htmlString) {
             parseNextCharacter();
             return;
         }
-        // todo: finish this method
+
+        consumeUntilNonWhitespace();
+        let commentText = '';
+        while(!isNextString('-->')) {
+            if(isNextCharacterWhitespace()) {
+                commentText += ' ';
+                consumeUntilNonWhitespace();
+            } else {
+                commentText += parseNextCharacter();
+            }
+        }
+
+        if(!isWhitespace(commentText.charAt(commentText.length - 1))) {
+            commentText += ' ';
+        }
+
+        parseExpectedString('-->');
+        formattedString += `<!-- ${commentText}-->\n`;
+    }
+
+    function isNextString(string) {
+        for(let i = 0; i < string.length; i++) {
+            if(previewNextCharacterAwayFromCurrentIndex(i) !== string.charAt(i)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     function previewNextCharacterAwayFromCurrentIndex(count) {
@@ -124,6 +151,10 @@ function formatHtml(htmlString) {
         for (let character of expectedString) {
             parseExpectedCharacter(character);
         }
+    }
+
+    function isNextCharacterWhitespace() {
+        return isWhitespace(previewNextCharacter());
     }
 
     // this asserts next character is whitespace
