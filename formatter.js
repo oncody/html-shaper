@@ -1,5 +1,7 @@
 'use strict';
 
+const stringUtils = require('./string-utils');
+
 module.exports = {
     formatHtml
 };
@@ -8,54 +10,54 @@ const tagsThatDoNotIndent = ['html','head','body'];
 
 function formatHtml(htmlString) {
     let index = 0;
-    let formattedString = '';
+    let formattedHtml = '';
     let indentation = 0;
     let tags = [];
 
     while(index < htmlString.length) {
         consumeUntilNonWhitespace();
-        if(previewNextCharacter() === '<') {
+        if(previewNextString(1) === '<') {
             parseElement();
         } else {
-            throwParseErrorIfUnequal('<', previewNextCharacter());
+            throwParseErrorIfUnequal('<', previewNextString(1));
         }
     }
 
-    return formattedString;
+    return formattedHtml;
 
     function parseElement() {
-        previewExpectedCharacter('<');
-        if(previewNextCharacterAwayFromCurrentIndex(1) === '!') {
+        previewExpectedString('<');
+        if(isNextString('<!')) {
             parseSpecialElement();
             return;
         }
 
-        parseExpectedCharacter('<');
+        parseExpectedString('<');
         let elementName = parseNonWhitespace();
         if(elementName.endsWith('/>')) {
-            formattedString += `<${elementName}\n`;
+            formattedHtml += `<${elementName}\n`;
             return;
         }
-    }
 
-    function isWhitespace(character) {
-        return /\s/.test(character);
+        if(elementName.endsWith('>')) {
+            formattedHtml += `<${elementName}`
+        }
     }
 
     function parseSpecialElement() {
         previewExpectedString('<!');
-        let nextCharacter = previewNextCharacterAwayFromCurrentIndex(2);
-        switch(nextCharacter) {
-            case '-': parseComment();
+        let nextString = previewNextString(3);
+        switch(nextString) {
+            case '<!-': parseComment();
             break;
-            case 'd': parseDoctype(); break;
-            case 'D': parseDoctype(); break;
-            default: throwParseErrorIfUnequal('-', nextCharacter);
+            case '<!d': parseDoctype(); break;
+            case '<!D': parseDoctype(); break;
+            default: throwParseErrorIfUnequal('<!', nextString);
         }
     }
 
     function consumeUntilNonWhitespace() {
-        while((index < htmlString.length) && isWhitespace(previewNextCharacter())) {
+        while((index < htmlString.length) && stringUtils.isWhitespace(previewNextString(1))) {
             parseNextCharacter();
         }
     }
@@ -67,12 +69,12 @@ function formatHtml(htmlString) {
         consumeUntilNonWhitespace();
         parseExpectedString('>');
 
-        formattedString += '<!doctype html>\n';
+        formattedHtml += '<!doctype html>\n';
     }
 
     function parseComment() {
         parseExpectedString('<!--');
-        if(previewNextCharacter() === '>') {
+        if(previewNextString(1) === '>') {
             parseNextCharacter();
             return;
         }
@@ -88,34 +90,24 @@ function formatHtml(htmlString) {
             }
         }
 
-        if(!isWhitespace(commentText.charAt(commentText.length - 1))) {
+        if(!stringUtils.isWhitespace(commentText.charAt(commentText.length - 1))) {
             commentText += ' ';
         }
 
         parseExpectedString('-->');
-        formattedString += `<!-- ${commentText}-->\n`;
+        formattedHtml += `<!-- ${commentText}-->\n`;
     }
 
-    function isNextString(string) {
-        for(let i = 0; i < string.length; i++) {
-            if(previewNextCharacterAwayFromCurrentIndex(i) !== string.charAt(i)) {
-                return false;
-            }
-        }
-
-        return true;
+    function isNextString(expectedString) {
+        return htmlString.substring(index, index + expectedString.length) === expectedString;
     }
 
-    function previewNextCharacterAwayFromCurrentIndex(count) {
-        return htmlString.charAt(index + count);
-    }
-
-    function previewNextCharacter() {
-        return previewNextCharacterAwayFromCurrentIndex(0);
+    function previewNextString(count) {
+        return htmlString.substring(index, index + count);
     }
 
     function parseNextCharacter() {
-        let currentChar = previewNextCharacter();
+        let currentChar = previewNextString(1);
         index++;
         return currentChar;
     }
@@ -126,44 +118,31 @@ function formatHtml(htmlString) {
         }
     }
 
-    function previewExpectedCharacter(expectedCharacter) {
-        throwParseErrorIfUnequal(expectedCharacter, previewNextCharacter());
-    }
-
-    function previewExpectedCharacterAwayFromCurrentIndex(expectedCharacter, count) {
-        throwParseErrorIfUnequal(expectedCharacter, previewNextCharacterAwayFromCurrentIndex(count));
-    }
-
-    function parseExpectedCharacter(expectedCharacter) {
-        throwParseErrorIfUnequal(expectedCharacter, parseNextCharacter());
-    }
-
     function parseNextExpectedWhitespaceCharacter() {
         let character = parseNextCharacter();
-        if(!isWhitespace(character)) {
+        if(!stringUtils.isWhitespace(character)) {
             throw `Parse Error. Expected a whitespace character, but found '${character}'`;
         }
     }
 
     function previewExpectedString(expectedString) {
-        for (let i = 0; i < expectedString.length; i++) {
-            previewExpectedCharacterAwayFromCurrentIndex(expectedString.charAt(i), i);
-        }
+        throwParseErrorIfUnequal(expectedString, htmlString.substring(index, index + expectedString.length));
     }
 
     function parseExpectedString(expectedString) {
+        previewExpectedString(expectedString);
         for (let character of expectedString) {
-            parseExpectedCharacter(character);
+            parseNextCharacter();
         }
     }
 
     function isNextCharacterWhitespace() {
-        return isWhitespace(previewNextCharacter());
+        return stringUtils.isWhitespace(previewNextString(1));
     }
 
     function parseNonWhitespace() {
         let string = '';
-        while((index < htmlString.length) && !isWhitespace(previewNextCharacter())) {
+        while((index < htmlString.length) && !stringUtils.isWhitespace(previewNextString(1))) {
             string += parseNextCharacter();
         }
 
