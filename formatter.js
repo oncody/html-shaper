@@ -139,7 +139,7 @@ function formatHtml(htmlString) {
     function parseAttributeValue() {
         parseQuoteCharacter();
         consumeNextWhitespace();
-        let value = previewNextMatchingCharacters(/[-\w\s]/);
+        let value = previewNextMatchingCharacters(/[^'"]/);
         consumeNextString(value);
         parseQuoteCharacter();
         return value;
