@@ -90,10 +90,13 @@ function formatHtml(htmlString) {
         while(previewNextMatchingCharacters(/[-\w]/).length > 0) {
             let name = parseAttributeName();
             consumeNextWhitespace();
-            consumeNextString('=');
-            consumeNextWhitespace();
-            let value = parseAttributeValue();
-            consumeNextWhitespace();
+            let value = null;
+            if(previewNextCharacters(1) === '=') {
+                consumeNextString('=');
+                consumeNextWhitespace();
+                value = parseAttributeValue();
+                consumeNextWhitespace();
+            }
             attributes[name] = value;
         }
 
@@ -113,7 +116,10 @@ function formatHtml(htmlString) {
                 appendToFormattedHtml(' ');
             }
 
-            appendToFormattedHtml(` ${Object.keys(attributes)[i]}="${attributes[Object.keys(attributes)[i]]}"`);
+            appendToFormattedHtml(` ${Object.keys(attributes)[i]}`);
+            if(attributes[Object.keys(attributes)[i]]) {
+                appendToFormattedHtml(`="${attributes[Object.keys(attributes)[i]]}"`);
+            }
 
             if(i + 1 < Object.keys(attributes).length) {
                 appendToFormattedHtml('\n');

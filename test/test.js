@@ -72,4 +72,29 @@ describe('Testing html', function() {
             assert.equal(formatter.formatHtml('<h1><h2></h2></h1>'), '<h1>\n  <h2></h2>\n</h1>\n');
         });
     });
+
+    describe('<head attribute></head>', function() {
+        it(`should return <head attribute></head>\n`, function() {
+            assert.equal(formatter.formatHtml('<head attribute></head>'), '<head attribute></head>\n');
+        });
+    });
+
+    describe('test', function() {
+        it(`test`, function() {
+            assert.equal(formatter.formatHtml('<!doctype html>\n' +
+                '<html ng-app>\n' +
+                '  <head>\n' +
+                '    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.2/angular.min.js"></script>\n' +
+                '  </head>\n' +
+                '  <body>\n' +
+                '    <div>\n' +
+                '      <label>Name:</label>\n' +
+                '      <input type="text" ng-model="yourName" placeholder="Enter a name here">\n' +
+                '      <hr>\n' +
+                '      <h1>Hello {{yourName}}!</h1>\n' +
+                '    </div>\n' +
+                '  </body>\n' +
+                '</html>'), 'test');
+        });
+    });
 });
