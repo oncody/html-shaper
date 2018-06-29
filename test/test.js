@@ -49,9 +49,15 @@ describe('Testing html', function() {
         });
     });
 
-    describe('<head attribute="key"></head>', function() {
-        it(`should return <head attribute="key"></head>\n`, function() {
-            assert.equal(formatter.formatHtml('<head attribute="key"></head>'), '<head attribute="key"></head>\n');
+    describe('<head attribute="value"></head>', function() {
+        it(`should return <head attribute="value"></head>\n`, function() {
+            assert.equal(formatter.formatHtml('<head attribute="value"></head>'), '<head attribute="value"></head>\n');
+        });
+    });
+
+    describe('<head first-attribute="value1" second-attribute="value1"></head>', function() {
+        it(`should return <head first-attribute="value1" second-attribute="value1"></head>\n`, function() {
+            assert.equal(formatter.formatHtml('<head first-attribute="value1" second-attribute="value1"></head>'), '<head first-attribute="value1" second-attribute="value1"></head>\n');
         });
     });
 });

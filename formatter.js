@@ -30,7 +30,7 @@ function formatHtml(htmlString) {
         assertNextString('<');
 
         let name = parseElementStartTag();
-        let attributes = parseAttributes();
+        let attributes = parseAttributes(name, indentation);
 
         if(nextStringIsEqualTo('/>')) {
             consumeNextString('/>');
@@ -68,10 +68,10 @@ function formatHtml(htmlString) {
         return name;
     }
 
-    function parseAttributes() {
+    function parseAttributes(elementName, indentation) {
         let attributes = {};
         consumeNextWhitespace();
-        if(previewNextMatchingCharacters(/[-\w]/).length > 0) {
+        while(previewNextMatchingCharacters(/[-\w]/).length > 0) {
             let name = parseAttributeName();
             consumeNextWhitespace();
             consumeNextString('=');
@@ -81,11 +81,25 @@ function formatHtml(htmlString) {
             attributes[name] = value;
         }
 
-        Object.keys(attributes).forEach(key => {
-            appendToFormattedHtml(` ${key}="${attributes[key]}"`);
-        });
+        printAttributes(elementName, attributes, indentation);
 
         return attributes;
+    }
+
+    function printAttributes(elementName, attributes, indentation) {
+        for(let i = 0; i < Object.keys(attributes).length; i++) {
+            if(i > 0) {
+                printIndentation(indentation);
+                for(let char of elementName) {
+                    appendToFormattedHtml(' ');
+                }
+            }
+            appendToFormattedHtml(` ${Object.keys(attributes)[i]}="${attributes[Object.keys(attributes)[i]]}"`);
+
+            if(i + 1 < Object.keys(attributes).length) {
+                appendToFormattedHtml('\n');
+            }
+        }
     }
 
     function parseAttributeName() {
