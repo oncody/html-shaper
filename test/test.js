@@ -48,4 +48,10 @@ describe('Testing html', function() {
             assert.equal(formatter.formatHtml('<head  ></head  >'), '<head></head>\n');
         });
     });
+
+    describe('<head attribute="key"></head>', function() {
+        it(`should return <head attribute="key"></head>\n`, function() {
+            assert.equal(formatter.formatHtml('<head attribute="key"></head>'), '<head attribute="key"></head>\n');
+        });
+    });
 });

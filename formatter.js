@@ -9,30 +9,28 @@ const tagsThatDoNotIndent = ['html','head','body'];
 function formatHtml(htmlString) {
     let index = 0;
     let formattedHtml = '';
-    let tags = [];
 
     while(index < htmlString.length) {
-        let whitespace = previewNextMatchingCharacters(/\s/);
-        consumeNextString(whitespace);
-        assertNextString('<');
+        consumeNextWhitespace();
         parseElement(0);
     }
 
     return formattedHtml;
 
     function parseElement(indentation) {
-        let attributes = {};
-
         assertNextString('<');
         if(nextStringIsEqualTo('<!')) {
             parseSpecialElement(indentation);
-            return;
+        } else {
+            parseBasicElement(indentation);
         }
+    }
 
-        consumeNextString('<');
-        let elementName = previewNextMatchingCharacters(/[-\w]/);
-        consumeNextString(elementName);
-        consumeNextString(previewNextMatchingCharacters(/\s/));
+    function parseBasicElement(indentation) {
+        assertNextString('<');
+
+        let elementName = parseElementStartTag();
+        let attributes = parseElementAttributes();
 
         if(nextStringIsEqualTo('/>')) {
             consumeNextString('/>');
@@ -50,15 +48,28 @@ function formatHtml(htmlString) {
             }
         }
 
-        consumeNextString(previewNextMatchingCharacters(/\s/));
+        consumeNextWhitespace();
         let elementEndToken = `</${elementName}`;
         if(nextStringIsEqualTo('</')) {
             consumeNextString(elementEndToken);
-            consumeNextString(previewNextMatchingCharacters(/\s/));
+            consumeNextWhitespace();
             consumeNextString('>');
             printIndentation(indentation);
             formattedHtml += elementEndToken + '>\n';
         }
+    }
+
+    function parseElementStartTag() {
+        consumeNextString('<');
+        let elementName = previewNextMatchingCharacters(/[-\w]/);
+        consumeNextString(elementName);
+        consumeNextWhitespace();
+        return elementName;
+    }
+
+    function parseElementAttributes() {
+        let attributes = {};
+        return attributes;
     }
 
     function parseSpecialElement(indentation) {
@@ -79,7 +90,7 @@ function formatHtml(htmlString) {
         }
         consumeNextString(whitespace);
         consumeNextString('html');
-        consumeNextString(previewNextMatchingCharacters(/\s/));
+        consumeNextWhitespace();
         consumeNextString('>');
 
         formattedHtml += '<!doctype html>\n';
@@ -92,12 +103,12 @@ function formatHtml(htmlString) {
             return;
         }
 
-        consumeNextString(previewNextMatchingCharacters(/\s/));
+        consumeNextWhitespace();
         let commentText = '';
         while(!nextStringIsEqualTo('-->')) {
             if(/\s/.test(previewNextCharacters(1))) {
                 commentText += ' ';
-                consumeNextString(previewNextMatchingCharacters(/\s/));
+                consumeNextWhitespace();
             } else {
                 commentText += consumeNextString(previewNextCharacters(1));
             }
@@ -109,8 +120,11 @@ function formatHtml(htmlString) {
 
         consumeNextString('-->');
         printIndentation(indentation);
-
         formattedHtml += `<!-- ${commentText}-->\n`;
+    }
+
+    function consumeNextWhitespace() {
+        consumeNextString(previewNextMatchingCharacters(/\s/));
     }
 
     function nextStringIsEqualTo(string) {
