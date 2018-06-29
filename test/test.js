@@ -37,27 +37,15 @@ describe('Testing html', function() {
         });
     });
 
-    describe('<head/>', function() {
-        it(`should return <head/>`, function() {
-            assert.equal(formatter.formatHtml('<head/>'), '<head/>\n');
+    describe('<head></head>', function() {
+        it(`should return <head></head>\n`, function() {
+            assert.equal(formatter.formatHtml('<head></head>'), '<head></head>\n');
         });
     });
 
-    describe('<head  />', function() {
-        it(`should return <head/>`, function() {
-            assert.equal(formatter.formatHtml('<head  />'), '<head/>\n');
-        });
-    });
-
-    describe('<head>', function() {
-        it(`should return <head>`, function() {
-            assert.equal(formatter.formatHtml('<head>'), '<head>');
-        });
-    });
-
-    describe('<head  >', function() {
-        it(`should return <head>`, function() {
-            assert.equal(formatter.formatHtml('<head  >'), '<head>');
+    describe('<head  ></head  >', function() {
+        it(`should return <head></head>\n`, function() {
+            assert.equal(formatter.formatHtml('<head  ></head  >'), '<head></head>\n');
         });
     });
 });

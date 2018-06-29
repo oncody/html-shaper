@@ -9,22 +9,23 @@ const tagsThatDoNotIndent = ['html','head','body'];
 function formatHtml(htmlString) {
     let index = 0;
     let formattedHtml = '';
-    let indentation = 0;
     let tags = [];
 
     while(index < htmlString.length) {
         let whitespace = previewNextMatchingTokens(/\s/);
         consumeNextString(whitespace);
         assertNextString('<');
-        parseElement();
+        parseElement(0);
     }
 
     return formattedHtml;
 
-    function parseElement() {
+    function parseElement(indentation) {
+        let attributes = {};
+
         assertNextString('<');
         if(previewNextString(2) === '<!') {
-            parseSpecialElement();
+            parseSpecialElement(indentation);
             return;
         }
 
@@ -35,21 +36,35 @@ function formatHtml(htmlString) {
 
         if(previewNextString(1) === '/' && previewNextString(2) === '/>') {
             consumeNextString('/>');
+            printIndentation();
             formattedHtml += `<${elementName}/>\n`;
             return;
         }
 
         if(previewNextString(1) === '>') {
             consumeNextString('>');
-            formattedHtml += `<${elementName}>`
+            printIndentation(indentation);
+            formattedHtml += `<${elementName}>`;
+            if(Object.keys(attributes).length > 1) {
+                formattedHtml += '\n';
+            }
+        }
+
+        consumeNextString(previewNextMatchingTokens(/\s/));
+        let elementEndToken = `</${elementName}`;
+        if(previewNextString(2) === '</') {
+            consumeNextString(elementEndToken);
+            consumeNextString(previewNextMatchingTokens(/\s/));
+            consumeNextString('>');
+            printIndentation(indentation);
+            formattedHtml += elementEndToken + '>\n';
         }
     }
 
-    function parseSpecialElement() {
+    function parseSpecialElement(indentation) {
         assertNextString('<!');
         switch(previewNextString(3)) {
-            case '<!-': parseComment();
-            break;
+            case '<!-': parseComment(indentation); break;
             case '<!d': parseDoctype(); break;
             case '<!D': parseDoctype(); break;
             default: throw `Parse Error. Expected '<!-', '<!d', or '<!D', but found '${previewNextString(3)}'`;
@@ -70,7 +85,7 @@ function formatHtml(htmlString) {
         formattedHtml += '<!doctype html>\n';
     }
 
-    function parseComment() {
+    function parseComment(indentation) {
         consumeNextString('<!--');
         if(previewNextString(1) === '>') {
             consumeNextString('>');
@@ -93,6 +108,8 @@ function formatHtml(htmlString) {
         }
 
         consumeNextString('-->');
+        printIndentation(indentation);
+
         formattedHtml += `<!-- ${commentText}-->\n`;
     }
 
@@ -129,6 +146,12 @@ function formatHtml(htmlString) {
         }
 
         return expectedString;
+    }
+
+    function printIndentation(indentation) {
+        for(let i = 0; i < indentation; i++) {
+            formattedHtml += '  ';
+        }
     }
 }
 
