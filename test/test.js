@@ -25,6 +25,12 @@ describe('Testing html', function() {
         });
     });
 
+    describe('<!--comment-->', function() {
+        it(`should return <!-- comment -->`, function() {
+            assert.equal(formatter.formatHtml('<!--comment-->'), '<!-- comment -->\n');
+        });
+    });
+
     describe('<!-- comment   text   -->', function() {
         it(`should return <!-- comment   text   -->`, function() {
             assert.equal(formatter.formatHtml('<!-- comment   text   -->'), '<!-- comment text -->\n');

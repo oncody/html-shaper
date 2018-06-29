@@ -1,7 +1,5 @@
 'use strict';
 
-const stringUtils = require('./string-utils');
-
 module.exports = {
     formatHtml
 };
@@ -15,25 +13,24 @@ function formatHtml(htmlString) {
     let tags = [];
 
     while(index < htmlString.length) {
-        consumeUntilNonWhitespace();
-        if(previewNextString(1) === '<') {
-            parseElement();
-        } else {
-            throwParseErrorIfUnequal('<', previewNextString(1));
-        }
+        let whitespace = previewNextMatchingTokens(/\s/);
+        consumeNextString(whitespace);
+        assertNextString('<');
+        parseElement();
     }
 
     return formattedHtml;
 
     function parseElement() {
-        previewExpectedString('<');
-        if(isNextString('<!')) {
+        assertNextString('<');
+        if(previewNextString(2) === '<!') {
             parseSpecialElement();
             return;
         }
 
-        parseExpectedString('<');
-        let elementName = parseNonWhitespace();
+        consumeNextString('<');
+        let elementName = previewNextMatchingTokens(/\S/);
+        consumeNextString(elementName);
         if(elementName.endsWith('/>')) {
             formattedHtml += `<${elementName}\n`;
             return;
@@ -45,115 +42,89 @@ function formatHtml(htmlString) {
     }
 
     function parseSpecialElement() {
-        previewExpectedString('<!');
-        let nextString = previewNextString(3);
-        switch(nextString) {
+        assertNextString('<!');
+        switch(previewNextString(3)) {
             case '<!-': parseComment();
             break;
             case '<!d': parseDoctype(); break;
             case '<!D': parseDoctype(); break;
-            default: throwParseErrorIfUnequal('<!', nextString);
+            default: throw `Parse Error. Expected '<!-', '<!d', or '<!D', but found '${previewNextString(3)}'`;
         }
     }
 
     function parseDoctype() {
-        parseExpectedString('<!doctype');
-        parseWhitespace();
-        parseExpectedString('html');
-        consumeUntilNonWhitespace();
-        parseExpectedString('>');
+        consumeNextString('<!doctype');
+        let whitespace = previewNextMatchingTokens(/\s/);
+        if(whitespace.length === 0) {
+            throw new `Parse Error. Expected whitespace after '<!doctype'`;
+        }
+        consumeNextString(whitespace);
+        consumeNextString('html');
+        consumeNextString(previewNextMatchingTokens(/\s/));
+        consumeNextString('>');
 
         formattedHtml += '<!doctype html>\n';
     }
 
     function parseComment() {
-        parseExpectedString('<!--');
+        consumeNextString('<!--');
         if(previewNextString(1) === '>') {
-            parseNextCharacter();
+            consumeNextString('>');
             return;
         }
 
-        consumeUntilNonWhitespace();
+        consumeNextString(previewNextMatchingTokens(/\s/));
         let commentText = '';
-        while(!isNextString('-->')) {
-            if(isNextCharacterWhitespace()) {
+        while(previewNextString(3) !== '-->') {
+            if(/\s/.test(previewNextString(1))) {
                 commentText += ' ';
-                consumeUntilNonWhitespace();
+                consumeNextString(previewNextMatchingTokens(/\s/));
             } else {
-                commentText += parseNextCharacter();
+                commentText += consumeNextString(previewNextString(1));
             }
         }
 
-        if(!stringUtils.isWhitespace(commentText.charAt(commentText.length - 1))) {
+        if(!/\s/.test(commentText.charAt(commentText.length - 1))) {
             commentText += ' ';
         }
 
-        parseExpectedString('-->');
+        consumeNextString('-->');
         formattedHtml += `<!-- ${commentText}-->\n`;
     }
 
-    function consumeUntilNonWhitespace() {
-        while((index < htmlString.length) && stringUtils.isWhitespace(previewNextString(1))) {
-            parseNextCharacter();
+    function previewNextMatchingTokens(regex) {
+        let matchingString = '';
+
+        for(let i = 0; ((index + i) < htmlString.length) && regex.test(htmlString.charAt(index + i)); i++) {
+            matchingString += htmlString.charAt(index + i);
+        }
+
+        return matchingString;
+    }
+
+    function previewNextString(length) {
+        if(index + length > htmlString.length) {
+            throw new `Parse Error. Requesting characters beyond end of input`;
+        }
+
+        return htmlString.substring(index, index + length);
+    }
+
+    function assertNextString(expectedString) {
+        if(previewNextString(expectedString.length).toLowerCase() !== expectedString.toLowerCase()) {
+            throw `Parse Error. Expected '${expectedString}', but found '${previewNextString(expectedString.length)}'`;
         }
     }
 
-    function isNextString(expectedString) {
-        return htmlString.substring(index, index + expectedString.length) === expectedString;
-    }
-
-    function previewNextString(count) {
-        return htmlString.substring(index, index + count);
-    }
-
-    function parseNextCharacter() {
-        let currentChar = previewNextString(1);
-        index++;
-        return currentChar;
-    }
-
-    function throwParseErrorIfUnequal(expectedCharacter, actualCharacter) {
-        if(actualCharacter.toLowerCase() !== expectedCharacter.toLowerCase()) {
-            throw `Parse Error. Expected '${expectedCharacter}', but found '${actualCharacter}'`;
-        }
-    }
-
-    function parseNextExpectedWhitespaceCharacter() {
-        let character = parseNextCharacter();
-        if(!stringUtils.isWhitespace(character)) {
-            throw `Parse Error. Expected a whitespace character, but found '${character}'`;
-        }
-    }
-
-    function previewExpectedString(expectedString) {
-        throwParseErrorIfUnequal(expectedString, htmlString.substring(index, index + expectedString.length));
-    }
-
-    function parseExpectedString(expectedString) {
-        previewExpectedString(expectedString);
-        for (let character of expectedString) {
-            parseNextCharacter();
-        }
-    }
-
-    function isNextCharacterWhitespace() {
-        return stringUtils.isWhitespace(previewNextString(1));
-    }
-
-    function parseNonWhitespace() {
-        let string = '';
-        while((index < htmlString.length) && !stringUtils.isWhitespace(previewNextString(1))) {
-            string += parseNextCharacter();
+    function consumeNextString(expectedString) {
+        for (let expectedCharacter of expectedString) {
+            if(previewNextString(1).toLowerCase() !== expectedCharacter.toLowerCase()) {
+                throw `Parse Error. Expected '${expectedCharacter}', but found '${previewNextString(1)}'`;
+            }
+            index++;
         }
 
-        return string;
-    }
-
-    // this asserts next character is whitespace
-    // will consume all next characters
-    function parseWhitespace() {
-        parseNextExpectedWhitespaceCharacter();
-        consumeUntilNonWhitespace();
+        return expectedString;
     }
 }
 
