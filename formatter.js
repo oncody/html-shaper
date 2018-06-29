@@ -29,15 +29,19 @@ function formatHtml(htmlString) {
         }
 
         consumeNextString('<');
-        let elementName = previewNextMatchingTokens(/\S/);
+        let elementName = previewNextMatchingTokens(/[-\w]/);
         consumeNextString(elementName);
-        if(elementName.endsWith('/>')) {
-            formattedHtml += `<${elementName}\n`;
+        consumeNextString(previewNextMatchingTokens(/\s/));
+
+        if(previewNextString(1) === '/' && previewNextString(2) === '/>') {
+            consumeNextString('/>');
+            formattedHtml += `<${elementName}/>\n`;
             return;
         }
 
-        if(elementName.endsWith('>')) {
-            formattedHtml += `<${elementName}`
+        if(previewNextString(1) === '>') {
+            consumeNextString('>');
+            formattedHtml += `<${elementName}>`
         }
     }
 
