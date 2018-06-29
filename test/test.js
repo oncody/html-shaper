@@ -60,4 +60,16 @@ describe('Testing html', function() {
             assert.equal(formatter.formatHtml('<head first-attribute="value1" second-attribute="value1"></head>'), '<head first-attribute="value1"\n      second-attribute="value1">\n</head>\n');
         });
     });
+
+    describe('<head>text</head>', function() {
+        it(`should return <head>text</head>\n`, function() {
+            assert.equal(formatter.formatHtml('<head>text</head>'), '<head>text</head>\n');
+        });
+    });
+
+    describe('<h1><h2></h2></h1>', function() {
+        it(`should return <h1>\n<h2></h2>\n</h1>\n`, function() {
+            assert.equal(formatter.formatHtml('<h1><h2></h2></h1>'), '<h1>\n  <h2></h2>\n</h1>\n');
+        });
+    });
 });

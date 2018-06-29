@@ -29,41 +29,57 @@ function formatHtml(htmlString) {
     function parseBasicElement(indentation) {
         assertNextString('<');
 
-        let name = parseElementStartTag();
+        let name = parseElementStartTag(indentation);
         let attributes = parseAttributes(name, indentation);
 
         if(nextStringIsEqualTo('/>')) {
             consumeNextString('/>');
-            printIndentation();
             appendToFormattedHtml('/>\n');
             return;
         }
 
         if(nextStringIsEqualTo('>')) {
             consumeNextString('>');
-            printIndentation(indentation);
             appendToFormattedHtml('>');
-            if(Object.keys(attributes).length > 1) {
-                appendToFormattedHtml('\n');
-            }
         }
 
         consumeNextWhitespace();
+        while(!nextStringIsEqualTo('</')) {
+            if(nextStringIsEqualTo('<')) {
+                formattedHtml += '\n';
+                parseElement(indentation + 1);
+            } else {
+                parseText();
+            }
+            consumeNextWhitespace();
+        }
+
         let endToken = `</${name}`;
         if(nextStringIsEqualTo('</')) {
             consumeNextString(endToken);
             consumeNextWhitespace();
             consumeNextString('>');
-            printIndentation(indentation);
+
+            if(Object.keys(attributes).length > 1) {
+                appendToFormattedHtml('\n');
+                printIndentation(indentation);
+            }
             appendToFormattedHtml(endToken + '>\n');
         }
     }
 
-    function parseElementStartTag() {
+    function parseText() {
+        let text = previewNextMatchingCharacters(/[^<]/);
+        consumeNextString(text);
+        formattedHtml += text;
+    }
+
+    function parseElementStartTag(indentation) {
         consumeNextString('<');
         let name = previewNextMatchingCharacters(/[-\w]/);
         consumeNextString(name);
         consumeNextWhitespace();
+        printIndentation(indentation);
         appendToFormattedHtml(`<${name}`);
         return name;
     }
@@ -93,9 +109,10 @@ function formatHtml(htmlString) {
                 for(let char of elementName) {
                     appendToFormattedHtml(' ');
                 }
-                // append one extra space for hte opening tag character '<'
+                // append one extra space for the opening tag character '<'
                 appendToFormattedHtml(' ');
             }
+
             appendToFormattedHtml(` ${Object.keys(attributes)[i]}="${attributes[Object.keys(attributes)[i]]}"`);
 
             if(i + 1 < Object.keys(attributes).length) {
