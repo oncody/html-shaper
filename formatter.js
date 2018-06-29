@@ -12,7 +12,7 @@ function formatHtml(htmlString) {
     let tags = [];
 
     while(index < htmlString.length) {
-        let whitespace = previewNextMatchingTokens(/\s/);
+        let whitespace = previewNextMatchingCharacters(/\s/);
         consumeNextString(whitespace);
         assertNextString('<');
         parseElement(0);
@@ -24,24 +24,24 @@ function formatHtml(htmlString) {
         let attributes = {};
 
         assertNextString('<');
-        if(previewNextString(2) === '<!') {
+        if(nextStringIsEqualTo('<!')) {
             parseSpecialElement(indentation);
             return;
         }
 
         consumeNextString('<');
-        let elementName = previewNextMatchingTokens(/[-\w]/);
+        let elementName = previewNextMatchingCharacters(/[-\w]/);
         consumeNextString(elementName);
-        consumeNextString(previewNextMatchingTokens(/\s/));
+        consumeNextString(previewNextMatchingCharacters(/\s/));
 
-        if(previewNextString(1) === '/' && previewNextString(2) === '/>') {
+        if(nextStringIsEqualTo('/>')) {
             consumeNextString('/>');
             printIndentation();
             formattedHtml += `<${elementName}/>\n`;
             return;
         }
 
-        if(previewNextString(1) === '>') {
+        if(nextStringIsEqualTo('>')) {
             consumeNextString('>');
             printIndentation(indentation);
             formattedHtml += `<${elementName}>`;
@@ -50,11 +50,11 @@ function formatHtml(htmlString) {
             }
         }
 
-        consumeNextString(previewNextMatchingTokens(/\s/));
+        consumeNextString(previewNextMatchingCharacters(/\s/));
         let elementEndToken = `</${elementName}`;
-        if(previewNextString(2) === '</') {
+        if(nextStringIsEqualTo('</')) {
             consumeNextString(elementEndToken);
-            consumeNextString(previewNextMatchingTokens(/\s/));
+            consumeNextString(previewNextMatchingCharacters(/\s/));
             consumeNextString('>');
             printIndentation(indentation);
             formattedHtml += elementEndToken + '>\n';
@@ -63,23 +63,23 @@ function formatHtml(htmlString) {
 
     function parseSpecialElement(indentation) {
         assertNextString('<!');
-        switch(previewNextString(3)) {
+        switch(previewNextCharacters(3)) {
             case '<!-': parseComment(indentation); break;
             case '<!d': parseDoctype(); break;
             case '<!D': parseDoctype(); break;
-            default: throw `Parse Error. Expected '<!-', '<!d', or '<!D', but found '${previewNextString(3)}'`;
+            default: throw `Parse Error. Expected '<!-', '<!d', or '<!D', but found '${previewNextCharacters(3)}'`;
         }
     }
 
     function parseDoctype() {
         consumeNextString('<!doctype');
-        let whitespace = previewNextMatchingTokens(/\s/);
+        let whitespace = previewNextMatchingCharacters(/\s/);
         if(whitespace.length === 0) {
             throw new `Parse Error. Expected whitespace after '<!doctype'`;
         }
         consumeNextString(whitespace);
         consumeNextString('html');
-        consumeNextString(previewNextMatchingTokens(/\s/));
+        consumeNextString(previewNextMatchingCharacters(/\s/));
         consumeNextString('>');
 
         formattedHtml += '<!doctype html>\n';
@@ -87,19 +87,19 @@ function formatHtml(htmlString) {
 
     function parseComment(indentation) {
         consumeNextString('<!--');
-        if(previewNextString(1) === '>') {
+        if(nextStringIsEqualTo('>')) {
             consumeNextString('>');
             return;
         }
 
-        consumeNextString(previewNextMatchingTokens(/\s/));
+        consumeNextString(previewNextMatchingCharacters(/\s/));
         let commentText = '';
-        while(previewNextString(3) !== '-->') {
-            if(/\s/.test(previewNextString(1))) {
+        while(!nextStringIsEqualTo('-->')) {
+            if(/\s/.test(previewNextCharacters(1))) {
                 commentText += ' ';
-                consumeNextString(previewNextMatchingTokens(/\s/));
+                consumeNextString(previewNextMatchingCharacters(/\s/));
             } else {
-                commentText += consumeNextString(previewNextString(1));
+                commentText += consumeNextString(previewNextCharacters(1));
             }
         }
 
@@ -113,17 +113,27 @@ function formatHtml(htmlString) {
         formattedHtml += `<!-- ${commentText}-->\n`;
     }
 
-    function previewNextMatchingTokens(regex) {
-        let matchingString = '';
-
-        for(let i = 0; ((index + i) < htmlString.length) && regex.test(htmlString.charAt(index + i)); i++) {
-            matchingString += htmlString.charAt(index + i);
+    function nextStringIsEqualTo(string) {
+        for(let i = 0; (i < string.length) && ((index + i) < htmlString.length); i++) {
+            if(string.charAt(i).toLowerCase() !== htmlString.charAt(index + i).toLowerCase()) {
+                return false;
+            }
         }
 
-        return matchingString;
+        return true;
     }
 
-    function previewNextString(length) {
+    function previewNextMatchingCharacters(regex) {
+        let matchingCharacters = '';
+
+        for(let i = 0; ((index + i) < htmlString.length) && regex.test(htmlString.charAt(index + i)); i++) {
+            matchingCharacters += htmlString.charAt(index + i);
+        }
+
+        return matchingCharacters;
+    }
+
+    function previewNextCharacters(length) {
         if(index + length > htmlString.length) {
             throw new `Parse Error. Requesting characters beyond end of input`;
         }
@@ -132,15 +142,15 @@ function formatHtml(htmlString) {
     }
 
     function assertNextString(expectedString) {
-        if(previewNextString(expectedString.length).toLowerCase() !== expectedString.toLowerCase()) {
-            throw `Parse Error. Expected '${expectedString}', but found '${previewNextString(expectedString.length)}'`;
+        if(previewNextCharacters(expectedString.length).toLowerCase() !== expectedString.toLowerCase()) {
+            throw `Parse Error. Expected '${expectedString}', but found '${previewNextCharacters(expectedString.length)}'`;
         }
     }
 
     function consumeNextString(expectedString) {
         for (let expectedCharacter of expectedString) {
-            if(previewNextString(1).toLowerCase() !== expectedCharacter.toLowerCase()) {
-                throw `Parse Error. Expected '${expectedCharacter}', but found '${previewNextString(1)}'`;
+            if(previewNextCharacters(1).toLowerCase() !== expectedCharacter.toLowerCase()) {
+                throw `Parse Error. Expected '${expectedCharacter}', but found '${previewNextCharacters(1)}'`;
             }
             index++;
         }
