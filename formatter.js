@@ -29,47 +29,89 @@ function formatHtml(htmlString) {
     function parseBasicElement(indentation) {
         assertNextString('<');
 
-        let elementName = parseElementStartTag();
-        let attributes = parseElementAttributes();
+        let name = parseElementStartTag();
+        let attributes = parseAttributes();
 
         if(nextStringIsEqualTo('/>')) {
             consumeNextString('/>');
             printIndentation();
-            appendToFormattedHtml(`<${elementName}/>\n`);
+            appendToFormattedHtml('/>\n');
             return;
         }
 
         if(nextStringIsEqualTo('>')) {
             consumeNextString('>');
             printIndentation(indentation);
-            appendToFormattedHtml(`<${elementName}>`);
+            appendToFormattedHtml('>');
             if(Object.keys(attributes).length > 1) {
                 appendToFormattedHtml('\n');
             }
         }
 
         consumeNextWhitespace();
-        let elementEndToken = `</${elementName}`;
+        let endToken = `</${name}`;
         if(nextStringIsEqualTo('</')) {
-            consumeNextString(elementEndToken);
+            consumeNextString(endToken);
             consumeNextWhitespace();
             consumeNextString('>');
             printIndentation(indentation);
-            appendToFormattedHtml(elementEndToken + '>\n');
+            appendToFormattedHtml(endToken + '>\n');
         }
     }
 
     function parseElementStartTag() {
         consumeNextString('<');
-        let elementName = previewNextMatchingCharacters(/[-\w]/);
-        consumeNextString(elementName);
+        let name = previewNextMatchingCharacters(/[-\w]/);
+        consumeNextString(name);
         consumeNextWhitespace();
-        return elementName;
+        appendToFormattedHtml(`<${name}`);
+        return name;
     }
 
-    function parseElementAttributes() {
+    function parseAttributes() {
         let attributes = {};
+        consumeNextWhitespace();
+        if(previewNextMatchingCharacters(/[-\w]/).length > 0) {
+            let name = parseAttributeName();
+            consumeNextWhitespace();
+            consumeNextString('=');
+            consumeNextWhitespace();
+            let value = parseAttributeValue();
+            consumeNextWhitespace();
+            attributes[name] = value;
+        }
+
+        Object.keys(attributes).forEach(key => {
+            appendToFormattedHtml(` ${key}="${attributes[key]}"`);
+        });
+
         return attributes;
+    }
+
+    function parseAttributeName() {
+        let name = previewNextMatchingCharacters(/[-\w]/);
+        if(name.length === 0) {
+            throw `Parse Error. Expected an attribute name, but found '${previewNextCharacters(1)}'`;
+        }
+        consumeNextString(name);
+        return name;
+    }
+
+    function parseAttributeValue() {
+        parseQuoteCharacter();
+        consumeNextWhitespace();
+        let value = previewNextMatchingCharacters(/[-\w\s]/);
+        consumeNextString(value);
+        parseQuoteCharacter();
+        return value;
+    }
+
+    function parseQuoteCharacter() {
+        let nextString = previewNextMatchingCharacters(/['"]/);
+        if(nextString.length === 0) {
+            throw `Parse Error. Expected ' or ", but found '${previewNextCharacters(1)}'`;
+        }
+        consumeNextString(nextString.charAt(0));
     }
 
     function parseSpecialElement(indentation) {
@@ -178,7 +220,7 @@ function formatHtml(htmlString) {
     }
 
     function appendToFormattedHtml(string) {
-        formattedHtml += string.toLowerCase();
+        formattedHtml += string.toLowerCase().replace(`'`, `"`);
     }
 }
 
