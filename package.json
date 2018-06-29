@@ -1,0 +1,17 @@
+{
+  "name": "html-formatter",
+  "version": "1.0.0",
+  "description": "Formats HTML",
+  "main": "formatter.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "mocha": "latest"
+  },
+  "author": "",
+  "license": "ISC"
+}

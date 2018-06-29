@@ -56,8 +56,8 @@ describe('Testing html', function() {
     });
 
     describe('<head first-attribute="value1" second-attribute="value1"></head>', function() {
-        it(`should return <head first-attribute="value1" second-attribute="value1"></head>\n`, function() {
-            assert.equal(formatter.formatHtml('<head first-attribute="value1" second-attribute="value1"></head>'), '<head first-attribute="value1" second-attribute="value1"></head>\n');
+        it(`should return <head first-attribute="value1"\n      second-attribute="value1">\n</head>\\n`, function() {
+            assert.equal(formatter.formatHtml('<head first-attribute="value1" second-attribute="value1"></head>'), '<head first-attribute="value1"\n      second-attribute="value1">\n</head>\n');
         });
     });
 });

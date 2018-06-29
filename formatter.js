@@ -93,6 +93,8 @@ function formatHtml(htmlString) {
                 for(let char of elementName) {
                     appendToFormattedHtml(' ');
                 }
+                // append one extra space for hte opening tag character '<'
+                appendToFormattedHtml(' ');
             }
             appendToFormattedHtml(` ${Object.keys(attributes)[i]}="${attributes[Object.keys(attributes)[i]]}"`);
 
