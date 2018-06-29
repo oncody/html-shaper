@@ -35,16 +35,16 @@ function formatHtml(htmlString) {
         if(nextStringIsEqualTo('/>')) {
             consumeNextString('/>');
             printIndentation();
-            formattedHtml += `<${elementName}/>\n`;
+            appendToFormattedHtml(`<${elementName}/>\n`);
             return;
         }
 
         if(nextStringIsEqualTo('>')) {
             consumeNextString('>');
             printIndentation(indentation);
-            formattedHtml += `<${elementName}>`;
+            appendToFormattedHtml(`<${elementName}>`);
             if(Object.keys(attributes).length > 1) {
-                formattedHtml += '\n';
+                appendToFormattedHtml('\n');
             }
         }
 
@@ -55,7 +55,7 @@ function formatHtml(htmlString) {
             consumeNextWhitespace();
             consumeNextString('>');
             printIndentation(indentation);
-            formattedHtml += elementEndToken + '>\n';
+            appendToFormattedHtml(elementEndToken + '>\n');
         }
     }
 
@@ -92,8 +92,7 @@ function formatHtml(htmlString) {
         consumeNextString('html');
         consumeNextWhitespace();
         consumeNextString('>');
-
-        formattedHtml += '<!doctype html>\n';
+        appendToFormattedHtml('<!doctype html>\n');
     }
 
     function parseComment(indentation) {
@@ -120,7 +119,7 @@ function formatHtml(htmlString) {
 
         consumeNextString('-->');
         printIndentation(indentation);
-        formattedHtml += `<!-- ${commentText}-->\n`;
+        appendToFormattedHtml(`<!-- ${commentText}-->\n`);
     }
 
     function consumeNextWhitespace() {
@@ -174,8 +173,12 @@ function formatHtml(htmlString) {
 
     function printIndentation(indentation) {
         for(let i = 0; i < indentation; i++) {
-            formattedHtml += '  ';
+            appendToFormattedHtml('  ');
         }
+    }
+
+    function appendToFormattedHtml(string) {
+        formattedHtml += string.toLowerCase();
     }
 }
 
