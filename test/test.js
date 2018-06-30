@@ -79,6 +79,12 @@ describe('Testing html', function() {
         });
     });
 
+    describe('<br>', function() {
+        it(`should return <br>\n`, function() {
+            assert.equal(formatter.formatHtml('<br>'), '<br>\n');
+        });
+    });
+
     describe('test', function() {
         it(`test`, function() {
             assert.equal(formatter.formatHtml('<!doctype html>\n' +

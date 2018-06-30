@@ -5,6 +5,7 @@ module.exports = {
 };
 
 const tagsThatDoNotIndent = ['html','head','body'];
+const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
 
 function formatHtml(htmlString) {
     let index = 0;
@@ -38,16 +39,23 @@ function formatHtml(htmlString) {
             return;
         }
 
-        if(nextStringIsEqualTo('>')) {
-            consumeNextString('>');
-            appendToFormattedHtml('>');
+        assertNextString('>');
+        consumeNextString('>');
+        appendToFormattedHtml('>');
+        if(voidElements.includes(name)) {
+            appendToFormattedHtml('\n');
+            return;
         }
 
         consumeNextWhitespace();
         while(!nextStringIsEqualTo('</')) {
             if(nextStringIsEqualTo('<')) {
                 formattedHtml += '\n';
-                parseElement(indentation + 1);
+                if(tagsThatDoNotIndent.includes(name)) {
+                    parseElement(indentation);
+                } else {
+                    parseElement(indentation + 1);
+                }
             } else {
                 parseText();
             }
