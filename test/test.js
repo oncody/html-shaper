@@ -87,7 +87,7 @@ describe('Testing html', function() {
 
     describe('test', function() {
         it(`test`, function() {
-            let input = '<!doctype html><html ng-app> <head> <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.2/angular.min.js"></script> </head> <body> <div> <label>Name:</label> <input type="text" ng-model="yourName" placeholder="Enter a name here"> <hr> <h1>Hello {{yourName}}!</h1> </div></body></html>';
+            let input = '<!doctype html><html ng-app="app"><head> <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.2/angular.min.js"></script> <script src="components.js"></script> <script src="app.js"></script> </head><body> <tabs> <pane title="Localization"> <span>Date: {{ \'2012-04-01\' | date:\'fullDate\' }}</span><br> <span>Currency: {{ 123456 | currency }}</span><br> <span>Number: {{ 98765.4321 | number }}</span><br> </pane> <pane title="Pluralization"><div ng-controller="BeerCounter"><div ng-repeat="beerCount in beers"> <ng-pluralize count="beerCount" when="beerForms"></ng-pluralize></div></div> </pane> </tabs></body></html>';
             assert.equal(formatter.formatHtml(input), 'test');
         });
     });

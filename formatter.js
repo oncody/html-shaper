@@ -48,9 +48,11 @@ function formatHtml(htmlString) {
         }
 
         consumeNextWhitespace();
-        if(nextStringIsEqualTo('<') && !nextStringIsEqualTo('</')) {
+        let hasSubElements = nextStringIsEqualTo('<') && !nextStringIsEqualTo('</');
+        if(hasSubElements) {
             appendToFormattedHtml('\n');
         }
+
         while(!nextStringIsEqualTo('</')) {
             if(nextStringIsEqualTo('<')) {
                 if(tagsThatDoNotIndent.includes(name)) {
@@ -72,6 +74,8 @@ function formatHtml(htmlString) {
 
             if(Object.keys(attributes).length > 1) {
                 appendToFormattedHtml('\n');
+            }
+            if(hasSubElements || (Object.keys(attributes).length > 1)) {
                 printIndentation(indentation);
             }
             appendToFormattedHtml(endToken + '>\n');
@@ -128,7 +132,7 @@ function formatHtml(htmlString) {
             }
 
             appendToFormattedHtml(` ${Object.keys(attributes)[i]}`);
-            if(attributes[Object.keys(attributes)[i]]) {
+            if(attributes[Object.keys(attributes)[i]] !== null) {
                 appendToFormattedHtml(`="${attributes[Object.keys(attributes)[i]]}"`);
             }
 
