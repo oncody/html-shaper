@@ -87,20 +87,8 @@ describe('Testing html', function() {
 
     describe('test', function() {
         it(`test`, function() {
-            assert.equal(formatter.formatHtml('<!doctype html>\n' +
-                '<html ng-app>\n' +
-                '  <head>\n' +
-                '    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.2/angular.min.js"></script>\n' +
-                '  </head>\n' +
-                '  <body>\n' +
-                '    <div>\n' +
-                '      <label>Name:</label>\n' +
-                '      <input type="text" ng-model="yourName" placeholder="Enter a name here">\n' +
-                '      <hr>\n' +
-                '      <h1>Hello {{yourName}}!</h1>\n' +
-                '    </div>\n' +
-                '  </body>\n' +
-                '</html>'), 'test');
+            let input = '<!doctype html><html ng-app> <head> <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.2/angular.min.js"></script> </head> <body> <div> <label>Name:</label> <input type="text" ng-model="yourName" placeholder="Enter a name here"> <hr> <h1>Hello {{yourName}}!</h1> </div></body></html>';
+            assert.equal(formatter.formatHtml(input), 'test');
         });
     });
 });

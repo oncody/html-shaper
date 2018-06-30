@@ -48,9 +48,11 @@ function formatHtml(htmlString) {
         }
 
         consumeNextWhitespace();
+        if(nextStringIsEqualTo('<') && !nextStringIsEqualTo('</')) {
+            appendToFormattedHtml('\n');
+        }
         while(!nextStringIsEqualTo('</')) {
             if(nextStringIsEqualTo('<')) {
-                formattedHtml += '\n';
                 if(tagsThatDoNotIndent.includes(name)) {
                     parseElement(indentation);
                 } else {
@@ -79,7 +81,7 @@ function formatHtml(htmlString) {
     function parseText() {
         let text = previewNextMatchingCharacters(/[^<]/);
         consumeNextString(text);
-        formattedHtml += text;
+        appendToFormattedHtml(text);
     }
 
     function parseElementStartTag(indentation) {
@@ -88,6 +90,7 @@ function formatHtml(htmlString) {
         consumeNextString(name);
         consumeNextWhitespace();
         printIndentation(indentation);
+        name = name.toLowerCase();
         appendToFormattedHtml(`<${name}`);
         return name;
     }
@@ -267,7 +270,7 @@ function formatHtml(htmlString) {
     }
 
     function appendToFormattedHtml(string) {
-        formattedHtml += string.toLowerCase().replace(`'`, `"`);
+        formattedHtml += string;
     }
 }
 
