@@ -4,7 +4,8 @@ module.exports = {
     formatHtml
 };
 
-const tagsThatDoNotIndent = ['html','head','body'];
+// 'head'
+const tagsThatDoNotIndent = ['html','body'];
 const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
 
 function formatHtml(htmlString) {
@@ -14,6 +15,7 @@ function formatHtml(htmlString) {
     while(index < htmlString.length) {
         consumeNextWhitespace();
         parseElement(0);
+        consumeNextWhitespace();
     }
 
     return formattedHtml;
@@ -152,6 +154,7 @@ function formatHtml(htmlString) {
     }
 
     function parseAttributeValue() {
+        // todo: fix bug where single quote within double quote and vice-versa
         parseQuoteCharacter();
         consumeNextWhitespace();
         let value = previewNextMatchingCharacters(/[^'"]/);
