@@ -18,7 +18,6 @@ function formatHtml(htmlString) {
         consumeNextWhitespace();
     }
 
-    console.log('formatted: ' + formattedHtml);
     return formattedHtml;
 
     function parseElement(indentation) {

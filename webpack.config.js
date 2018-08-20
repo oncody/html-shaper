@@ -1,7 +1,5 @@
 'use strict';
 
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-
 module.exports = {
   entry: [
     './src/index.js'
@@ -10,18 +8,13 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.html$/,
-        use: ['html-loader','html-formatter-loader']
-
-      },
+        test: /\.js$/,
+        exclude: /node_modules/,
+        loader: 'eslint-loader',
+        options: {
+          fix: true
+        }
+      }
     ]
-  },
-  resolveLoader: {
-    alias: {
-      'html-formatter-loader': './src/loader.js'
-    }
-  },
-  plugins: [
-    new HtmlWebpackPlugin({template: './src/index.html'}),
-  ]
+  }
 };
