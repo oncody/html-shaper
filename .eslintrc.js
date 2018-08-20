@@ -54,8 +54,8 @@ module.exports = {
     'block-scoped-var': 'error',
     'class-methods-use-this': 'error',
     'complexity': [
-      'error',
-      5
+      'warn',
+      10
     ],
     'consistent-return': [
       'error',
@@ -171,7 +171,14 @@ module.exports = {
     'no-undef-init': 'error',
     'no-undefined': 'error',
     'no-unused-vars': 'error',
-    'no-use-before-define': 'error',
+    'no-use-before-define': [
+      'error',
+      {
+        classes: true,
+        functions: false,
+        variables: true
+      }
+    ],
 
     // Node.js and CommonJS
     'callback-return': 'error',
@@ -225,7 +232,7 @@ module.exports = {
       'warn',
       {
         min: 1,
-        max: 20
+        max: 30
       }
     ],
     'id-match': 'off',
@@ -251,12 +258,12 @@ module.exports = {
     'max-len': [
       'error',
       {
-        code: 80
+        code: 160
       }
     ],
     'max-lines': [
       'warn',
-      100
+      500
     ],
     'max-nested-callbacks': [
       'error',
@@ -267,7 +274,7 @@ module.exports = {
       3
     ],
     'max-statements': [
-      'error',
+      'warn',
       10
     ],
     'max-statements-per-line': 'error',

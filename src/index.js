@@ -1,287 +1,262 @@
-'use strict';
+const StringParser = require('./string-parser');
 
 module.exports = {
-    formatHtml
+  formatHtml
 };
 
-// 'head'
-const tagsThatDoNotIndent = ['html','body'];
-const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+const NON_INDENTATION_ELEMENTS = [
+  'html',
+  'body'
+];
+
+const VOID_ELEMENTS = [
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'keygen',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr'
+];
 
 function formatHtml(htmlString) {
-    let index = 0;
-    let formattedHtml = '';
+  const stringParser = new StringParser(htmlString);
+  let formattedHtml = '';
 
-    while(index < htmlString.length) {
-        consumeNextWhitespace();
-        parseElement(0);
-        consumeNextWhitespace();
+  while (!stringParser.finished()) {
+    stringParser.consumeNextWhitespace();
+    parseElement(0);
+    stringParser.consumeNextWhitespace();
+  }
+
+  return formattedHtml;
+
+  function parseElement(indentation) {
+    stringParser.assertNextString('<');
+    if (stringParser.nextStringIsEqualTo('<!')) {
+      parseSpecialElement(indentation);
+    } else {
+      parseBasicElement(indentation);
+    }
+  }
+
+  function parseBasicElement(indentation) {
+    stringParser.assertNextString('<');
+
+    const name = parseElementStartTag(indentation);
+    const attributes = parseAttributes(name, indentation);
+
+    if (stringParser.nextStringIsEqualTo('/>')) {
+      stringParser.consumeNextString('/>');
+      appendToFormattedHtml('/>\n');
+      return;
     }
 
-    return formattedHtml;
+    stringParser.assertNextString('>');
+    stringParser.consumeNextString('>');
+    appendToFormattedHtml('>');
+    if (VOID_ELEMENTS.includes(name)) {
+      appendToFormattedHtml('\n');
+      return;
+    }
 
-    function parseElement(indentation) {
-        assertNextString('<');
-        if(nextStringIsEqualTo('<!')) {
-            parseSpecialElement(indentation);
+    stringParser.consumeNextWhitespace();
+    const hasSubElements = stringParser.nextStringIsEqualTo('<') && !stringParser.nextStringIsEqualTo('</');
+    if (hasSubElements) {
+      appendToFormattedHtml('\n');
+    }
+
+    while (!stringParser.nextStringIsEqualTo('</')) {
+      if (stringParser.nextStringIsEqualTo('<')) {
+        if (NON_INDENTATION_ELEMENTS.includes(name)) {
+          parseElement(indentation);
         } else {
-            parseBasicElement(indentation);
+          parseElement(indentation + 1);
         }
+      } else {
+        parseText();
+      }
+      stringParser.consumeNextWhitespace();
     }
 
-    function parseBasicElement(indentation) {
-        assertNextString('<');
+    const endToken = `</${name}`;
+    if (stringParser.nextStringIsEqualTo('</')) {
+      stringParser.consumeNextString(endToken);
+      stringParser.consumeNextWhitespace();
+      stringParser.consumeNextString('>');
 
-        let name = parseElementStartTag(indentation);
-        let attributes = parseAttributes(name, indentation);
-
-        if(nextStringIsEqualTo('/>')) {
-            consumeNextString('/>');
-            appendToFormattedHtml('/>\n');
-            return;
-        }
-
-        assertNextString('>');
-        consumeNextString('>');
-        appendToFormattedHtml('>');
-        if(voidElements.includes(name)) {
-            appendToFormattedHtml('\n');
-            return;
-        }
-
-        consumeNextWhitespace();
-        let hasSubElements = nextStringIsEqualTo('<') && !nextStringIsEqualTo('</');
-        if(hasSubElements) {
-            appendToFormattedHtml('\n');
-        }
-
-        while(!nextStringIsEqualTo('</')) {
-            if(nextStringIsEqualTo('<')) {
-                if(tagsThatDoNotIndent.includes(name)) {
-                    parseElement(indentation);
-                } else {
-                    parseElement(indentation + 1);
-                }
-            } else {
-                parseText();
-            }
-            consumeNextWhitespace();
-        }
-
-        let endToken = `</${name}`;
-        if(nextStringIsEqualTo('</')) {
-            consumeNextString(endToken);
-            consumeNextWhitespace();
-            consumeNextString('>');
-
-            if(Object.keys(attributes).length > 1) {
-                appendToFormattedHtml('\n');
-            }
-            if(hasSubElements || (Object.keys(attributes).length > 1)) {
-                printIndentation(indentation);
-            }
-            appendToFormattedHtml(endToken + '>\n');
-        }
-    }
-
-    // todo: comments inside text will not work
-    function parseText() {
-      consumeNextWhitespace();
-        let text = previewNextMatchingCharacters(/[^<]/);
-        consumeNextString(text);
-        text = text.replace(/\s+/, ' ');
-        text = text.replace(/\s$/, '');
-        appendToFormattedHtml(text);
-    }
-
-    function parseElementStartTag(indentation) {
-        consumeNextString('<');
-        let name = previewNextMatchingCharacters(/[-\w]/);
-        consumeNextString(name);
-        consumeNextWhitespace();
+      if (Object.keys(attributes).length > 1) {
+        appendToFormattedHtml('\n');
+      }
+      if (hasSubElements || Object.keys(attributes).length > 1) {
         printIndentation(indentation);
-        name = name.toLowerCase();
-        appendToFormattedHtml(`<${name}`);
-        return name;
+      }
+      appendToFormattedHtml(`${endToken}>\n`);
+    }
+  }
+
+  // todo: comments inside text will not work
+  function parseText() {
+    stringParser.consumeNextWhitespace();
+    let text = stringParser.previewNextMatchingCharacters(/[^<]/);
+    stringParser.consumeNextString(text);
+    text = text.replace(/\s+/, ' ');
+    text = text.replace(/\s$/, '');
+    appendToFormattedHtml(text);
+  }
+
+  function parseElementStartTag(indentation) {
+    stringParser.consumeNextString('<');
+    let name = stringParser.previewNextMatchingCharacters(/[-\w]/);
+    stringParser.consumeNextString(name);
+    stringParser.consumeNextWhitespace();
+    printIndentation(indentation);
+    name = name.toLowerCase();
+    appendToFormattedHtml(`<${name}`);
+    return name;
+  }
+
+  function parseAttributes(elementName, indentation) {
+    const attributes = {};
+    stringParser.consumeNextWhitespace();
+    while (stringParser.previewNextMatchingCharacters(/[-\w]/).length > 0) {
+      const name = parseAttributeName();
+      stringParser.consumeNextWhitespace();
+      let value = null;
+      if (stringParser.previewNextCharacters(1) === '=') {
+        stringParser.consumeNextString('=');
+        stringParser.consumeNextWhitespace();
+        value = parseAttributeValue();
+        stringParser.consumeNextWhitespace();
+      }
+      attributes[name] = value;
     }
 
-    function parseAttributes(elementName, indentation) {
-        let attributes = {};
-        consumeNextWhitespace();
-        while(previewNextMatchingCharacters(/[-\w]/).length > 0) {
-            let name = parseAttributeName();
-            consumeNextWhitespace();
-            let value = null;
-            if(previewNextCharacters(1) === '=') {
-                consumeNextString('=');
-                consumeNextWhitespace();
-                value = parseAttributeValue();
-                consumeNextWhitespace();
-            }
-            attributes[name] = value;
-        }
+    printAttributes(elementName, attributes, indentation);
 
-        printAttributes(elementName, attributes, indentation);
+    return attributes;
+  }
 
-        return attributes;
-    }
-
-    function printAttributes(elementName, attributes, indentation) {
-        for(let i = 0; i < Object.keys(attributes).length; i++) {
-            if(i > 0) {
-                printIndentation(indentation);
-                for(let char of elementName) {
-                    appendToFormattedHtml(' ');
-                }
-                // append one extra space for the opening tag character '<'
-                appendToFormattedHtml(' ');
-            }
-
-            appendToFormattedHtml(` ${Object.keys(attributes)[i]}`);
-            if(attributes[Object.keys(attributes)[i]] !== null) {
-                appendToFormattedHtml(`="${attributes[Object.keys(attributes)[i]]}"`);
-            }
-
-            if(i + 1 < Object.keys(attributes).length) {
-                appendToFormattedHtml('\n');
-            }
-        }
-    }
-
-    function parseAttributeName() {
-        let name = previewNextMatchingCharacters(/[-\w]/);
-        if(name.length === 0) {
-            throw `Parse Error. Expected an attribute name, but found '${previewNextCharacters(1)}'`;
-        }
-        consumeNextString(name);
-        return name;
-    }
-
-    function parseAttributeValue() {
-        // todo: fix bug where single quote within double quote and vice-versa
-        parseQuoteCharacter();
-        consumeNextWhitespace();
-        let value = previewNextMatchingCharacters(/[^'"]/);
-        consumeNextString(value);
-        parseQuoteCharacter();
-        return value;
-    }
-
-    function parseQuoteCharacter() {
-        let nextString = previewNextMatchingCharacters(/['"]/);
-        if(nextString.length === 0) {
-            throw `Parse Error. Expected ' or ", but found '${previewNextCharacters(1)}'`;
-        }
-        consumeNextString(nextString.charAt(0));
-    }
-
-    function parseSpecialElement(indentation) {
-        assertNextString('<!');
-        switch(previewNextCharacters(3)) {
-            case '<!-': parseComment(indentation); break;
-            case '<!d': parseDoctype(); break;
-            case '<!D': parseDoctype(); break;
-            default: throw `Parse Error. Expected '<!-', '<!d', or '<!D', but found '${previewNextCharacters(3)}'`;
-        }
-    }
-
-    function parseDoctype() {
-        consumeNextString('<!doctype');
-        let whitespace = previewNextMatchingCharacters(/\s/);
-        if(whitespace.length === 0) {
-            throw new `Parse Error. Expected whitespace after '<!doctype'`;
-        }
-        consumeNextString(whitespace);
-        consumeNextString('html');
-        consumeNextWhitespace();
-        consumeNextString('>');
-        appendToFormattedHtml('<!doctype html>\n');
-    }
-
-    function parseComment(indentation) {
-        consumeNextString('<!--');
-        if(nextStringIsEqualTo('>')) {
-            consumeNextString('>');
-            return;
-        }
-
-        consumeNextWhitespace();
-        let commentText = '';
-        while(!nextStringIsEqualTo('-->')) {
-            if(/\s/.test(previewNextCharacters(1))) {
-                commentText += ' ';
-                consumeNextWhitespace();
-            } else {
-                commentText += consumeNextString(previewNextCharacters(1));
-            }
-        }
-
-        if(!/\s/.test(commentText.charAt(commentText.length - 1))) {
-            commentText += ' ';
-        }
-
-        consumeNextString('-->');
+  function printAttributes(elementName, attributes, indentation) {
+    for (let i = 0; i < Object.keys(attributes).length; i++) {
+      if (i > 0) {
         printIndentation(indentation);
-        appendToFormattedHtml(`<!-- ${commentText}-->\n`);
+        elementName.split('').forEach(() => appendToFormattedHtml(' '));
+
+        // append one extra space for the opening tag character '<'
+        appendToFormattedHtml(' ');
+      }
+
+      appendToFormattedHtml(` ${Object.keys(attributes)[i]}`);
+      if (attributes[Object.keys(attributes)[i]] !== null) {
+        appendToFormattedHtml(`="${attributes[Object.keys(attributes)[i]]}"`);
+      }
+
+      if (i + 1 < Object.keys(attributes).length) {
+        appendToFormattedHtml('\n');
+      }
+    }
+  }
+
+  function parseAttributeName() {
+    const name = stringParser.previewNextMatchingCharacters(/[-\w]/);
+    if (name.length === 0) {
+      throw new Error(`Parse Error. Expected an attribute name, but found '${stringParser.previewNextCharacters(1)}'`);
+    }
+    stringParser.consumeNextString(name);
+    return name;
+  }
+
+  function parseAttributeValue() {
+    // todo: fix bug where single quote within double quote and vice-versa
+    parseQuoteCharacter();
+    stringParser.consumeNextWhitespace();
+    const value = stringParser.previewNextMatchingCharacters(/[^'"]/);
+    stringParser.consumeNextString(value);
+    parseQuoteCharacter();
+    return value;
+  }
+
+  function parseQuoteCharacter() {
+    const nextString = stringParser.previewNextMatchingCharacters(/['"]/);
+    if (nextString.length === 0) {
+      throw new Error(`Parse Error. Expected ' or ", but found '${stringParser.previewNextCharacters(1)}'`);
+    }
+    stringParser.consumeNextString(nextString.charAt(0));
+  }
+
+  function parseSpecialElement(indentation) {
+    stringParser.assertNextString('<!');
+    switch (stringParser.previewNextCharacters(3)) {
+      case '<!-':
+        parseComment(indentation);
+        break;
+      case '<!d':
+        parseDoctype();
+        break;
+      case '<!D':
+        parseDoctype();
+        break;
+      default: throw new Error(`Parse Error. Expected '<!-', '<!d', or '<!D', but found '${stringParser.previewNextCharacters(3)}'`);
+    }
+  }
+
+  function parseDoctype() {
+    stringParser.consumeNextString('<!doctype');
+    const whitespace = stringParser.previewNextMatchingCharacters(/\s/);
+    if (whitespace.length === 0) {
+      throw new Error('Parse Error. Expected whitespace after \'<!doctype\'');
+    }
+    stringParser.consumeNextString(whitespace);
+    stringParser.consumeNextString('html');
+    stringParser.consumeNextWhitespace();
+    stringParser.consumeNextString('>');
+    appendToFormattedHtml('<!doctype html>\n');
+  }
+
+  function parseComment(indentation) {
+    stringParser.consumeNextString('<!--');
+    if (stringParser.nextStringIsEqualTo('>')) {
+      stringParser.consumeNextString('>');
+      return;
     }
 
-    function consumeNextWhitespace() {
-        consumeNextString(previewNextMatchingCharacters(/\s/));
+    stringParser.consumeNextWhitespace();
+    let commentText = '';
+    while (!stringParser.nextStringIsEqualTo('-->')) {
+      if (/\s/.test(stringParser.previewNextCharacters(1))) {
+        commentText += ' ';
+        stringParser.consumeNextWhitespace();
+      } else {
+        commentText += stringParser.consumeNextString(stringParser.previewNextCharacters(1));
+      }
     }
 
-    function nextStringIsEqualTo(string) {
-        for(let i = 0; (i < string.length) && ((index + i) < htmlString.length); i++) {
-            if(string.charAt(i).toLowerCase() !== htmlString.charAt(index + i).toLowerCase()) {
-                return false;
-            }
-        }
-
-        return true;
+    if (!/\s/.test(commentText.charAt(commentText.length - 1))) {
+      commentText += ' ';
     }
 
-    function previewNextMatchingCharacters(regex) {
-        let matchingCharacters = '';
+    stringParser.consumeNextString('-->');
+    printIndentation(indentation);
+    appendToFormattedHtml(`<!-- ${commentText}-->\n`);
+  }
 
-        for(let i = 0; ((index + i) < htmlString.length) && regex.test(htmlString.charAt(index + i)); i++) {
-            matchingCharacters += htmlString.charAt(index + i);
-        }
-
-        return matchingCharacters;
+  function printIndentation(indentation) {
+    for (let i = 0; i < indentation; i++) {
+      appendToFormattedHtml('  ');
     }
+  }
 
-    function previewNextCharacters(length) {
-        if(index + length > htmlString.length) {
-            throw new `Parse Error. Requesting characters beyond end of input`;
-        }
-
-        return htmlString.substring(index, index + length);
-    }
-
-    function assertNextString(expectedString) {
-        if(previewNextCharacters(expectedString.length).toLowerCase() !== expectedString.toLowerCase()) {
-            throw `Parse Error. Expected '${expectedString}', but found '${previewNextCharacters(expectedString.length)}'`;
-        }
-    }
-
-    function consumeNextString(expectedString) {
-        for (let expectedCharacter of expectedString) {
-            if(previewNextCharacters(1).toLowerCase() !== expectedCharacter.toLowerCase()) {
-                throw `Parse Error. Expected '${expectedCharacter}', but found '${previewNextCharacters(1)}'`;
-            }
-            index++;
-        }
-
-        return expectedString;
-    }
-
-    function printIndentation(indentation) {
-        for(let i = 0; i < indentation; i++) {
-            appendToFormattedHtml('  ');
-        }
-    }
-
-    function appendToFormattedHtml(string) {
-        formattedHtml += string;
-    }
+  function appendToFormattedHtml(string) {
+    formattedHtml += string;
+  }
 }
 
