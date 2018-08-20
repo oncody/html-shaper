@@ -1,4 +1,4 @@
-const formatter = require('../formatter');
+const formatter = require('../src/formatter');
 const assert = require('assert');
 
 describe('Testing html', function() {
@@ -85,11 +85,17 @@ describe('Testing html', function() {
         });
     });
 
-    describe('test', function() {
-        it(`test`, function() {
-            let input = '<div id="app"></div>\n' +
-                '<script src="./dist/main.js"></script>\n';
-            assert.equal(formatter.formatHtml(input), 'test');
-        });
+  describe('<div>hi\n</div>', function() {
+    it(`should return <div>hi</div>`, function() {
+      assert.equal(formatter.formatHtml('<div>hi\n</div>'), '<div>hi</div>\n');
     });
+  });
+
+    // describe('test', function() {
+    //     it(`test`, function() {
+    //         let input = '<div id="app"></div>\n' +
+    //             '<script src="./dist/main.js"></script>\n';
+    //         assert.equal(formatter.formatHtml(input), 'test');
+    //     });
+    // });
 });

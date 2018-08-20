@@ -2,15 +2,21 @@
   "name": "html-formatter",
   "version": "1.0.0",
   "description": "Formats HTML",
-  "main": "formatter.js",
+  "mai n": "formatter.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "webpack"
   },
   "devDependencies": {
-    "mocha": "latest"
+    "fs": "latest",
+    "html-loader": "latest",
+    "html-webpack-plugin": "latest",
+    "mocha": "latest",
+    "path": "latest",
+    "webpack": "latest",
+    "webpack-cli": "latest"
   },
   "author": "",
   "license": "ISC"

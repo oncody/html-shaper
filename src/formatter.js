@@ -18,6 +18,7 @@ function formatHtml(htmlString) {
         consumeNextWhitespace();
     }
 
+    console.log('formatted: ' + formattedHtml);
     return formattedHtml;
 
     function parseElement(indentation) {
@@ -84,9 +85,13 @@ function formatHtml(htmlString) {
         }
     }
 
+    // todo: comments inside text will not work
     function parseText() {
+      consumeNextWhitespace();
         let text = previewNextMatchingCharacters(/[^<]/);
         consumeNextString(text);
+        text = text.replace(/\s+/, ' ');
+        text = text.replace(/\s$/, '');
         appendToFormattedHtml(text);
     }
 
