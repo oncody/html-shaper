@@ -1,5 +1,7 @@
 'use strict';
 
+const eslintConfig = require('oncody-eslint-config');
+
 module.exports = {
   entry: [
     './src/index.js'
@@ -11,9 +13,7 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules/,
         loader: 'eslint-loader',
-        options: {
-          fix: true
-        }
+        options: eslintConfig
       }
     ]
   }
