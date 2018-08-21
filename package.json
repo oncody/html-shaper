@@ -2,7 +2,7 @@
   "name": "html-formatter",
   "version": "1.0.0",
   "description": "Formats HTML",
-  "mai n": "formatter.js",
+  "main": "index.js",
   "directories": {
     "test": "test"
   },
@@ -20,6 +20,6 @@
     "webpack": "latest",
     "webpack-cli": "latest"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Cody Smith",
+  "license": "MIT"
 }
