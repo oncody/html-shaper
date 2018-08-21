@@ -12,9 +12,6 @@
   "devDependencies": {
     "eslint": "latest",
     "eslint-loader": "latest",
-    "fs": "latest",
-    "html-loader": "latest",
-    "html-webpack-plugin": "latest",
     "mocha": "latest",
     "oncody-eslint-config": "latest",
     "webpack": "latest",
