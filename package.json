@@ -1,5 +1,5 @@
 {
-  "name": "html-formatter",
+  "name": "html-shaper",
   "version": "1.0.0",
   "description": "Formats HTML",
   "main": "index.js",
