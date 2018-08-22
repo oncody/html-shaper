@@ -4,7 +4,7 @@ const eslintConfig = require('oncody-eslint-config');
 
 module.exports = {
   entry: [
-    './src/index.js'
+    './index.js'
   ],
   mode: 'development',
   module: {

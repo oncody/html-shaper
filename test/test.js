@@ -1,4 +1,4 @@
-const formatter = require('../src/index');
+const formatter = require('../index');
 const assert = require('assert');
 
 describe('Testing html', () => {

@@ -1,4 +1,3 @@
-
 class StringParser {
   constructor(input) {
     this.input = input;

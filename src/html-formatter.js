@@ -1,4 +1,3 @@
-
 const StringParser = require('./string-parser');
 
 module.exports = {
